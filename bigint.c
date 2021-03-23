@@ -82,25 +82,29 @@ static int YASL_bigint___pos(struct YASL_State *S) {
 	return 1;
 }
 
-#define mp_eq(left, right) (mp_cmp(left, right) == MP_EQ)
-#define mp_lt(left, right) (mp_cmp(left, right) == MP_LT)
-#define mp_gt(left, right) (mp_cmp(left, right) == MP_GT)
+#define mp_eq(result) (result == MP_EQ)
+#define mp_lt(result) (result == MP_LT)
+#define mp_le(result) (mp_eq(result) || mp_lt(result))
+#define mp_gt(result) (result == MP_GT)
+#define mp_ge(result) (mp_eq(result) || mp_gt(result))
 
 #define DEFINE_COMP(name) \
 static int YASL_bigint___##name(struct YASL_State *S) {\
 	mp_int *left = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.__" #name, 0);\
 	mp_int *right = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.__" #name, 1);\
 	\
-	bool result = mp_##name(left, right);\
+	int result = mp_cmp(left, right);\
 	\
-	YASL_pushbool(S, result);\
+	YASL_pushbool(S, mp_##name(result));\
 	\
 	return 1;\
 }
 
 DEFINE_COMP(eq)
 DEFINE_COMP(lt)
+DEFINE_COMP(le)
 DEFINE_COMP(gt)
+DEFINE_COMP(ge)
 
 #define DEFINE_ARITH(op, name) \
 static int YASL_bigint___##name(struct YASL_State *S) {\
@@ -226,8 +230,16 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 	YASL_pushcfunction(S, YASL_bigint___lt, 2);
 	YASL_tableset(S);
 
+	YASL_pushlit(S, "__le");
+	YASL_pushcfunction(S, YASL_bigint___le, 2);
+	YASL_tableset(S);
+
 	YASL_pushlit(S, "__gt");
 	YASL_pushcfunction(S, YASL_bigint___gt, 2);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "__ge");
+	YASL_pushcfunction(S, YASL_bigint___ge, 2);
 	YASL_tableset(S);
 
 	YASL_pushlit(S, "__eq");
