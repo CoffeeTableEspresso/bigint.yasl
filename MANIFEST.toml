@@ -1,0 +1,9 @@
+name = "bigint"
+authors = [ "CoffeeTableEspresso <coffeetableespresso@gmail.com>" ]
+version = "v0.1.0"
+
+[build]
+sources = [ "bigint.c" ]
+linkage = [ "tommath" ]
+
+[deps]
