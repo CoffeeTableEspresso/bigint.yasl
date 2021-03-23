@@ -17,7 +17,7 @@ static mp_int *init_bigint(struct YASL_State *S) {
 }
 
 static void YASL_pushbigint(struct YASL_State *S, mp_int *value) {
-	YASL_pushuserdata(S, value, BIGINT_NAME, mp_clear);
+	YASL_pushuserdata(S, value, BIGINT_NAME, (void (*)(void *))mp_clear);
 	YASL_loadmt(S, BIGINT_NAME);
 	YASL_setmt(S);
 }
@@ -47,6 +47,7 @@ int YASL_bigint_tostr(struct YASL_State *S) {
 
 	int size;
 	int result = mp_radix_size(v, 10, &size);
+	(void) result;
 
 	char *buffer = malloc(size);
 
