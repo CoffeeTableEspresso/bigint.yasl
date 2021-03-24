@@ -53,7 +53,7 @@ int YASL_bigint_tostr(struct YASL_State *S) {
 
 	mp_toradix(v, buffer, 10);
 
-	YASL_pushlstr(S, buffer, size);
+	YASL_pushzstr(S, buffer);
 
 	free(buffer);
 

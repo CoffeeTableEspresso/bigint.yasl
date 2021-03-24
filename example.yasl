@@ -5,6 +5,9 @@ const bigint = __require_c__('./cmake-build-debug/libbigint.so')
 const n = bigint.bigint('10000000000000000000000000000000000000000002')
 const k = bigint.bigint('2000000000000000000000000000000000000000000')
 
+echo "n=#{n}, k=#{k}"
+
+/*
 echo -n
 echo +n
 
@@ -28,3 +31,4 @@ echo n > k
 echo n >= k
 echo n < k
 echo n <= k
+*/
