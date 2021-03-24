@@ -1,0 +1,30 @@
+
+const bigint = __require_c__('./cmake-build-debug/libbigint.so')
+
+
+const n = bigint.bigint('10000000000000000000000000000000000000000002')
+const k = bigint.bigint('2000000000000000000000000000000000000000000')
+
+echo -n
+echo +n
+
+echo n + k
+echo n - k
+
+echo n * k
+echo n // k
+echo n % k
+
+# These two will error:
+# echo n // bigint.bigint('0')
+# echo n % bigint.bigint('0')
+
+echo n & k
+echo n | k
+echo n ^ k
+
+echo n == k
+echo n > k
+echo n >= k
+echo n < k
+echo n <= k
