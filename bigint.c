@@ -23,10 +23,30 @@ static void YASL_pushbigint(struct YASL_State *S, mp_int *value) {
 }
 
 int YASL_bigint_bigint(struct YASL_State *S) {
+	if (YASL_isnint(S, 0)) {
+		yasl_int n = YASL_peeknint(S, 0);
+		mp_int *value = init_bigint(S);
+		int result;
+		if (n < 0) {
+			result = mp_set_int(value, -n);
+			mp_neg(value, value);
+		} else {
+			result = mp_set_int(value, n);
+		}
+		if (result) {
+			YASL_print_err(S, "Error creating bigint: %s", mp_error_to_string(result));
+			YASL_throw_err(S, YASL_VALUE_ERROR);
+		}
+
+		YASL_pushbigint(S, value);
+		return 1;
+	}
+
 	if (!YASL_isnstr(S, 0)) {
 		YASLX_print_err_bad_arg_type(S, "bigint.bigint", 0, BIGINT_NAME, YASL_peekntypename(S, 0));
 		YASL_throw_err(S, YASL_TYPE_ERROR);
 	}
+
 	const char *str = YASL_popcstr(S);
 
 	mp_int *value = init_bigint(S);

@@ -1,11 +1,17 @@
 
 const bigint = __require_c__('./cmake-build-debug/libbigint.so')
 
-
+/*
 const n = bigint.bigint('10000000000000000000000000000000000000000002')
 const k = bigint.bigint('2000000000000000000000000000000000000000000')
 
 echo "n=#{n}, k=#{k}"
+*/
+
+const m = bigint.bigint(-100)
+const o = bigint.bigint('200')
+
+echo m * o
 
 /*
 echo -n
