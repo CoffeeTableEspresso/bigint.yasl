@@ -9,10 +9,10 @@ echo "n=#{n}, k=#{k}"
 */
 
 const m = bigint.bigint(-100)
+const o = bigint.bigint(4)
 
-const o = bigint.bigint(m)
-
-echo m * o
+echo m << 4
+echo m >> 4
 
 /*
 echo -n

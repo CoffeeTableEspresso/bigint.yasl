@@ -200,6 +200,40 @@ static int YASL_bigint___mod(struct YASL_State *S) {
 	return 1;
 }
 
+static int YASL_bigint___bshl(struct YASL_State *S) {
+	mp_int *left = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.__bshl", 0);
+	yasl_int right = YASLX_checknint(S, "bigint.__bshl", 1);
+
+	mp_int *value = init_bigint(S);
+
+	int result = mp_mul_2d(left, right, value);
+	if (result) {
+		YASL_print_err(S, "Error performing arithmetic: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_ERROR);
+	}
+
+	YASL_pushbigint(S, value);
+
+	return 1;
+}
+
+static int YASL_bigint___bshr(struct YASL_State *S) {
+	mp_int *left = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.__bshr", 0);
+	yasl_int right = YASLX_checknint(S, "bigint.__bshr", 1);
+
+	mp_int *value = init_bigint(S);
+
+	int result = mp_div_2d(left, right, value, NULL);
+	if (result) {
+		YASL_print_err(S, "Error performing arithmetic: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_ERROR);
+	}
+
+	YASL_pushbigint(S, value);
+
+	return 1;
+}
+
 int YASL_load_dyn_lib(struct YASL_State *S) {
 	YASL_pushtable(S);
 	YASL_registermt(S, BIGINT_NAME);
@@ -248,6 +282,14 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 
 	YASL_pushlit(S, "__bxor");
 	YASL_pushcfunction(S, YASL_bigint___bxor, 2);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "__bshl");
+	YASL_pushcfunction(S, YASL_bigint___bshl, 2);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "__bshr");
+	YASL_pushcfunction(S, YASL_bigint___bshr, 2);
 	YASL_tableset(S);
 
 	YASL_pushlit(S, "__lt");
