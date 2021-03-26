@@ -1,6 +1,7 @@
 name = "bigint"
 authors = [ "CoffeeTableEspresso <coffeetableespresso@gmail.com>" ]
 version = "v0.1.0"
+license = "MIT"
 
 [build]
 sources = [ "bigint.c" ]
