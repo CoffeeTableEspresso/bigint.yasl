@@ -9,7 +9,8 @@ echo "n=#{n}, k=#{k}"
 */
 
 const m = bigint.bigint(-100)
-const o = bigint.bigint('200')
+
+const o = bigint.bigint(m)
 
 echo m * o
 

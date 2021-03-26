@@ -23,6 +23,10 @@ static void YASL_pushbigint(struct YASL_State *S, mp_int *value) {
 }
 
 int YASL_bigint_bigint(struct YASL_State *S) {
+	if (YASL_isnuserdata(S, BIGINT_NAME, 0)) {
+		return 1;
+	}
+
 	if (YASL_isnint(S, 0)) {
 		yasl_int n = YASL_peeknint(S, 0);
 		mp_int *value = init_bigint(S);
