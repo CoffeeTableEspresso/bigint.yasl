@@ -1,0 +1,19 @@
+assert __VERSION__ >= 'v0.11.2'
+
+const bigint = __require_c__('libbigint')
+
+const fn expMod(a, b, N) {
+       a = bigint.bigint(a)
+       b = bigint.bigint(b)
+       let acc = bigint.bigint(1)
+       const zero = bigint.bigint(0)
+       const one = bigint.bigint(1)
+       while b > zero {
+               if b & one > zero {
+                       acc = (acc*a) % N
+               }
+               a = (a*a) % N
+               b >>= 1
+       }
+       return acc % N
+}

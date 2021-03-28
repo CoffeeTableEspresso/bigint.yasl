@@ -3,6 +3,7 @@ authors = [ "CoffeeTableEspresso <coffeetableespresso@gmail.com>" ]
 version = "v0.1.0"
 
 [build]
+scripts = [ "bigint.yasl" ]
 sources = [ "bigint.c" ]
 linkage = [ "tommath" ]
 

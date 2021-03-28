@@ -8,11 +8,11 @@ const k = bigint.bigint('2000000000000000000000000000000000000000000')
 echo "n=#{n}, k=#{k}"
 */
 
-const m = bigint.bigint(-100)
-const o = bigint.bigint(4)
+const m = bigint.bigint(-0x100)
+const o = bigint.bigint(-0x0F)
 
-echo m << 4
-echo m >> 4
+echo m
+echo o
 
 /*
 echo -n
