@@ -30,16 +30,15 @@ int YASL_bigint_bigint(struct YASL_State *S) {
 	if (YASL_isnint(S, 0)) {
 		yasl_int n = YASL_peeknint(S, 0);
 		mp_int *value = init_bigint(S);
-		int result;
 		if (n < 0) {
-			result = mp_set_int(value, -n);
-			mp_neg(value, value);
+			mp_set_i64(value, -n);
+			int result = mp_neg(value, value);
+			if (result) {
+				YASL_print_err(S, "Error creating bigint: %s", mp_error_to_string(result));
+				YASL_throw_err(S, YASL_ERROR);
+			}
 		} else {
-			result = mp_set_int(value, n);
-		}
-		if (result) {
-			YASL_print_err(S, "Error creating bigint: %s", mp_error_to_string(result));
-			YASL_throw_err(S, YASL_VALUE_ERROR);
+			mp_set_i64(value, n);
 		}
 
 		YASL_pushbigint(S, value);
@@ -80,6 +79,141 @@ int YASL_bigint_tostr(struct YASL_State *S) {
 	YASL_pushzstr(S, buffer);
 
 	free(buffer);
+
+	return 1;
+}
+
+int YASL_bigint_iszero(struct YASL_State *S) {
+	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.iszero", 0);
+
+	YASL_pushbool(S, mp_iszero(n));
+
+	return 1;
+}
+
+int YASL_bigint_iseven(struct YASL_State *S) {
+	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.iseven", 0);
+
+	YASL_pushbool(S, mp_iseven(n));
+
+	return 1;
+}
+
+int YASL_bigint_isodd(struct YASL_State *S) {
+	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.isodd", 0);
+
+	YASL_pushbool(S, mp_isodd(n));
+
+	return 1;
+}
+
+const uint32_t MAX_UINT32 = 0xFFFFFFFF;
+static int YASL_bigint_log_n(struct YASL_State *S) {
+	mp_int *a = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.log_n", 0);
+	yasl_int n = YASLX_checknint(S, "bigint.log_n", 1);
+
+	if (n <= 1) {
+		YASL_print_err(S, "Invalid logarithm base given: %li", n);
+		YASL_throw_err(S, YASL_VALUE_ERROR);
+	}
+	if (n > MAX_UINT32) {
+		YASL_print_err(S, "Logarithm base was not smaller than 2^32: %li", n);
+		YASL_throw_err(S, YASL_VALUE_ERROR);
+	}
+
+	uint32_t value;
+	int result = mp_log_u32(a, (uint32_t)n, &value);
+	if (result) {
+		YASL_print_err(S, "Error performing operation: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_ERROR);
+	}
+
+	YASL_pushint(S, value);
+
+	return 1;
+}
+
+int YASL_bigint_isprime(struct YASL_State *S) {
+	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.isprime", 0);
+
+	const int bitsize = mp_count_bits(n);
+
+	int value;
+	int result = mp_prime_is_prime(n, mp_prime_rabin_miller_trials(bitsize), &value);
+	if (result) {
+		YASL_print_err(S, "Error performing operation: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_ERROR);
+	}
+
+	YASL_pushbool(S, value);
+
+	return 1;
+}
+
+static int YASL_bigint_kronecker(struct YASL_State *S) {
+	mp_int *a = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.kronecker", 0);
+	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.kronecker", 1);
+
+	int value;
+	int result = mp_kronecker(a, n, &value);
+	if (result) {
+		YASL_print_err(S, "Error performing operation: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_ERROR);
+	}
+
+	YASL_pushint(S, value);
+
+	return 1;
+}
+
+static int YASL_bigint_gcd(struct YASL_State *S) {
+	mp_int *a = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.gcd", 0);
+	mp_int *b = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.gcd", 1);
+
+	mp_int *value = init_bigint(S);
+
+	int result = mp_gcd(a, b, value);
+	if (result) {
+		YASL_print_err(S, "Error performing operation: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_ERROR);
+	}
+
+	YASL_pushbigint(S, value);
+
+	return 1;
+}
+
+static int YASL_bigint_lcm(struct YASL_State *S) {
+	mp_int *a = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.lcm", 0);
+	mp_int *b = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.lcm", 1);
+
+	mp_int *value = init_bigint(S);
+
+	int result = mp_lcm(a, b, value);
+	if (result) {
+		YASL_print_err(S, "Error performing operation: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_ERROR);
+	}
+
+	YASL_pushbigint(S, value);
+
+	return 1;
+}
+
+static int YASL_bigint_powmod(struct YASL_State *S) {
+	mp_int *a = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.powmod", 0);
+	mp_int *b = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.powmod", 1);
+	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.powmod", 2);
+
+	mp_int *value = init_bigint(S);
+
+	int result = mp_exptmod(a, b, n, value);
+	if (result) {
+		YASL_print_err(S, "Error performing operation: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_ERROR);
+	}
+
+	YASL_pushbigint(S, value);
 
 	return 1;
 }
@@ -200,6 +334,32 @@ static int YASL_bigint___mod(struct YASL_State *S) {
 	return 1;
 }
 
+static int YASL_bigint___pow(struct YASL_State *S) {
+	mp_int *base = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.__pow", 0);
+	yasl_int exponent = YASLX_checknint(S, "bigint.__pow", 1);
+
+	if (exponent < 0) {
+		YASL_print_err(S, "Invalid exponent given: %li", exponent);
+		YASL_throw_err(S, YASL_VALUE_ERROR);
+	}
+	if (exponent > MAX_UINT32) {
+		YASL_print_err(S, "Exponent was not smaller than 2^32: %li", exponent);
+		YASL_throw_err(S, YASL_VALUE_ERROR);
+	}
+
+	mp_int *value = init_bigint(S);
+
+	int result = mp_expt_u32(base, (uint32_t)exponent, value);
+	if (result) {
+		YASL_print_err(S, "Error performing arithmetic: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_ERROR);
+	}
+
+	YASL_pushbigint(S, value);
+
+	return 1;
+}
+
 static int YASL_bigint___bshl(struct YASL_State *S) {
 	mp_int *left = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.__bshl", 0);
 	yasl_int right = YASLX_checknint(S, "bigint.__bshl", 1);
@@ -244,6 +404,26 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 	YASL_pushcfunction(S, YASL_bigint_tostr, 1);
 	YASL_tableset(S);
 
+	YASL_pushlit(S, "iszero");
+	YASL_pushcfunction(S, YASL_bigint_iszero, 1);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "iseven");
+	YASL_pushcfunction(S, YASL_bigint_iseven, 1);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "isodd");
+	YASL_pushcfunction(S, YASL_bigint_isodd, 1);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "isprime");
+	YASL_pushcfunction(S, YASL_bigint_isprime, 1);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "log_n");
+	YASL_pushcfunction(S, YASL_bigint_log_n, 2);
+	YASL_tableset(S);
+
 	YASL_pushlit(S, "__neg");
 	YASL_pushcfunction(S, YASL_bigint___neg, 1);
 	YASL_tableset(S);
@@ -270,6 +450,10 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 
 	YASL_pushlit(S, "__mul");
 	YASL_pushcfunction(S, YASL_bigint___mul, 2);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "__pow");
+	YASL_pushcfunction(S, YASL_bigint___pow, 2);
 	YASL_tableset(S);
 
 	YASL_pushlit(S, "__band");
@@ -316,6 +500,31 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 
 	YASL_pushlit(S, "bigint");
 	YASL_pushcfunction(S, YASL_bigint_bigint, 1);
+	YASL_tableset(S);
+
+	// libTomMath utilities exposed
+	YASL_pushlit(S, "kronecker");
+	YASL_pushcfunction(S, YASL_bigint_kronecker, 2);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "gcd");
+	YASL_pushcfunction(S, YASL_bigint_gcd, 2);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "lcm");
+	YASL_pushcfunction(S, YASL_bigint_lcm, 2);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "pow");
+	YASL_pushcfunction(S, YASL_bigint___pow, 2);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "powmod");
+	YASL_pushcfunction(S, YASL_bigint_powmod, 3);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "log_n");
+	YASL_pushcfunction(S, YASL_bigint_log_n, 2);
 	YASL_tableset(S);
 
 	return 1;
