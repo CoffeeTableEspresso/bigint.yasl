@@ -33,8 +33,5 @@ jobs:
       )
     displayName: "Install YASL"
   - script:
-      ./tests
-    displayName: "Run API Tests"
-  - script:
       ./tests.sh
-    displayName: "Run Interpreter Tests"
+    displayName: "Run Tests"
