@@ -5,7 +5,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_C_STANDARD 99)
 
 if (NOT "${CMAKE_C_COMPILER_ID}" MATCHES ".*MSVC.*")
-    set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-vla -Wno-logical-op-parentheses -Wno-parentheses -Werror")
+    set(CMAKE_C_FLAGS "-Wall -Wextra -Wno-vla -Wno-logical-op-parentheses -Wno-parentheses")
 endif()
 
 include_directories(.)

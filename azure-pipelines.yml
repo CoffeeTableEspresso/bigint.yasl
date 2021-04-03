@@ -20,11 +20,15 @@ jobs:
     displayName: "Install Valgrind"  
   - script: |
       set -e
-      cmake .
-      make yasl
-      make yaslapi
-      make tests
-    displayName: "Compile"
+      git clone https://github.com/yasl-lang/yasl
+      (
+        cd yasl
+        cmake .
+        make yasl
+        make yaslapi
+        ./install.sh
+      )
+    displayName: "Install YASL"
   - script:
       ./tests
     displayName: "Run API Tests"

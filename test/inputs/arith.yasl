@@ -1,0 +1,22 @@
+
+const bigint = __require_c__('libbigint.so')
+
+const k = bigint.bigint('111111111111')
+const n = bigint.bigint('222222222222')
+
+echo k
+echo n
+
+echo -n
+echo +n
+
+echo n * k
+echo n // k
+echo n % k
+
+echo n + k
+echo n - k
+
+echo n & k
+echo n | k
+echo n ^ k

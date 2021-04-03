@@ -1,0 +1,6 @@
+
+const bigint = __require_c__('libbigint.so')
+
+const n = bigint.bigint('123456789123456789')
+
+echo n
