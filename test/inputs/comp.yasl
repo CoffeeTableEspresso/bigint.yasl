@@ -7,5 +7,5 @@ echo k == n
 echo k != n
 echo k < n
 echo k > n
-echo k >= n
 echo k <= n
+echo k >= n
