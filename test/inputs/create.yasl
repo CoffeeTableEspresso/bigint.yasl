@@ -1,5 +1,5 @@
 
-const bigint = __require_c__('libbigint.so')
+const bigint = __require_c__('bigint')
 
 const n = bigint.bigint('123456789123456789')
 
