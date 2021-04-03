@@ -23,7 +23,7 @@ jobs:
     displayName: "Install LibTomMath"
   - script: |
       set -e
-      git clone https://github.com/yasl-lang/yasl
+      git clone https://github.com/yasl-lang/yasl/tree/v0.11.2
       (
         cd yasl
         cmake .
@@ -36,6 +36,8 @@ jobs:
       set -e
       cmake .
       make
+      sudo mkdir -p /usr/local/lib/yasl/
+      sudo mv libbigint.so /usr/local/lib/yasl/
     displayName: "Compile"
   - script:
       ./tests.sh
