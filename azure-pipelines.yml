@@ -38,6 +38,7 @@ jobs:
       make
       sudo mkdir -p /usr/local/lib/yasl/
       sudo mv libbigint.so /usr/local/lib/yasl/
+      echo /usr/local/lib/yasl/
     displayName: "Compile"
   - script:
       ./tests.sh
