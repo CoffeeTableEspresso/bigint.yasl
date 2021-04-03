@@ -1,0 +1,11 @@
+const bigint = __require_c__('bigint')
+
+const k = bigint.bigint('111111111111')
+const n = bigint.bigint('222222222222')
+
+echo k == n
+echo k != n
+echo k < n
+echo k > n
+echo k >= n
+echo k <= n
