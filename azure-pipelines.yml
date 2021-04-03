@@ -26,7 +26,7 @@ jobs:
         cmake .
         make yasl
         make yaslapi
-        ./install.sh
+        sudo ./install.sh
       )
     displayName: "Install YASL"
   - script:
