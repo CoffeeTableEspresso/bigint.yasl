@@ -1,0 +1,33 @@
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+- v0.*
+
+pr:
+- master
+- v0.*
+
+jobs:
+- job: 
+  displayName: "C GCC Ubuntu"
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  - script:
+      sudo apt install valgrind
+    displayName: "Install Valgrind"  
+  - script: |
+      set -e
+      cmake .
+      make yasl
+      make yaslapi
+      make tests
+    displayName: "Compile"
+  - script:
+      ./tests
+    displayName: "Run API Tests"
+  - script:
+      ./tests.sh
+    displayName: "Run Interpreter Tests"
