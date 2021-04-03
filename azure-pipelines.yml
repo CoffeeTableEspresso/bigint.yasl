@@ -23,7 +23,8 @@ jobs:
     displayName: "Install LibTomMath"
   - script: |
       set -e
-      git clone https://github.com/yasl-lang/yasl/tree/v0.11.2
+      git clone https://github.com/yasl-lang/yasl/
+      git checkout v0.11.2
       (
         cd yasl
         cmake .
