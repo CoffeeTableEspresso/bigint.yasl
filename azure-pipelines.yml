@@ -32,6 +32,11 @@ jobs:
         sudo ./install.sh
       )
     displayName: "Install YASL"
+  - script: |
+      set -e
+      cmake .
+      make
+    displayName: "Compile"
   - script:
       ./tests.sh
     displayName: "Run Tests"
