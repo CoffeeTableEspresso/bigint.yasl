@@ -24,7 +24,6 @@ jobs:
   - script: |
       set -e
       git clone --single-branch --branch v0.11.2 https://github.com/yasl-lang/yasl/
-      git checkout v0.11.2
       (
         cd yasl
         cmake .
