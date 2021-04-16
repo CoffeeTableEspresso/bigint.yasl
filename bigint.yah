@@ -37,5 +37,5 @@ export {
     lcm(bigint, bigint) -> bigint
     pow(bigint, int) -> bigint
     powmod(bigint, bigint, bigint) -> bigint
-    log_n(self, int) -> int
+    log_n(bigint, int) -> int
 }
