@@ -1,12 +1,12 @@
 
 const bigint = require('bigint')
 
-const n = bigint.bigint('123456789123456789')
+const n = bigint('123456789123456789')
 
 echo n
 
-const k = bigint.bigint(1000)
+const k = bigint(1000)
 
 echo k
 
-echo bigint.bigint(k)
+echo bigint(k)

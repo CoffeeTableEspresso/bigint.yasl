@@ -498,7 +498,7 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 
 	YASL_pushtable(S);
 
-	YASL_pushlit(S, "bigint");
+	YASL_pushlit(S, "__call");
 	YASL_pushcfunction(S, YASL_bigint_bigint, 1);
 	YASL_tableset(S);
 

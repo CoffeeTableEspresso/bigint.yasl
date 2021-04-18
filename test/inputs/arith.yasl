@@ -1,8 +1,8 @@
 
 const bigint = require('bigint')
 
-const k = bigint.bigint('111111111111')
-const n = bigint.bigint('222222222222')
+const k = bigint('111111111111')
+const n = bigint('222222222222')
 
 echo k
 echo n
