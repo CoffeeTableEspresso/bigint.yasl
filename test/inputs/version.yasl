@@ -1,0 +1,3 @@
+const bigint = require('bigint')
+
+echo bigint.__VERSION__

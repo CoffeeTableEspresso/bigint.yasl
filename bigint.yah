@@ -1,0 +1,41 @@
+
+type bigint {
+    tostr(self) -> str
+
+    iszero(self) -> bool
+    iseven(self) -> bool
+    isodd(self) -> bool
+    isprime(self) -> bool
+
+    log_n(self, int) -> int
+
+    bigint < bigint -> bool
+    bigint <= bigint -> bool
+    bigint > bigint -> bool
+    bigint >= bigint -> bool
+    bigint == bigint -> bool
+    bigint != bigint -> bool
+    bigint | bigint -> bigint
+    bigint & bigint -> bigint
+    bigint ^ bigint -> bigint
+    bigint << int -> bigint
+    bigint >> int -> bigint
+    bigint - bigint -> bigint
+    bigint + bigint -> bigint
+    bigint // bigint -> bigint
+    bigint % bigint -> bigint
+    bigint * bigint -> bigint
+    bigint ** int -> bigint
+    +bigint -> bigint
+    -bigint -> bigint
+}
+
+export {
+    bigint(str | int | bigint) -> bigint
+    kronecker(bigint, bigint) -> int
+    gcd(bigint, bigint) -> bigint
+    lcm(bigint, bigint) -> bigint
+    pow(bigint, int) -> bigint
+    powmod(bigint, bigint, bigint) -> bigint
+    log_n(bigint, int) -> int
+}
