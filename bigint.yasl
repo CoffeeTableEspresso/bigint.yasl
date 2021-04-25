@@ -1,1 +1,1 @@
-export  { .__VERSION__: 'v0.1.0' } | __require_c__('bigint')
+export __require_c__('bigint')
