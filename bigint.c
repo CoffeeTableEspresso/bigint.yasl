@@ -3,6 +3,8 @@
 
 #include "tommath.h"
 
+#define BIGINT_VERSION "v0.2.0"
+
 static const char *BIGINT_NAME = "bigint";
 
 static mp_int *init_bigint(struct YASL_State *S) {
@@ -498,9 +500,11 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 
 	YASL_pushtable(S);
 
-	YASL_pushlit(S, "bigint");
+	YASL_pushtable(S);
+	YASL_pushlit(S, "__call");
 	YASL_pushcfunction(S, YASL_bigint_bigint, 1);
 	YASL_tableset(S);
+	YASL_setmt(S);
 
 	// libTomMath utilities exposed
 	YASL_pushlit(S, "kronecker");
@@ -525,6 +529,10 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 
 	YASL_pushlit(S, "log_n");
 	YASL_pushcfunction(S, YASL_bigint_log_n, 2);
+	YASL_tableset(S);
+
+	YASL_pushlit(S, "__VERSION__");\
+	YASL_pushlit(S, BIGINT_VERSION);
 	YASL_tableset(S);
 
 	return 1;

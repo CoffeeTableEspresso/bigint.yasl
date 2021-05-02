@@ -8,6 +8,8 @@ const k = bigint.bigint('2000000000000000000000000000000000000000000')
 echo "n=#{n}, k=#{k}"
 */
 
+echo bigint
+
 const m = bigint.bigint(-0x100)
 const o = bigint.bigint(-0x0F)
 
