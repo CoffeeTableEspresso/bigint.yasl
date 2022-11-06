@@ -18,8 +18,13 @@ static mp_int *init_bigint(struct YASL_State *S) {
 	return value;
 }
 
+static void free_bigint(struct YASL_State *S, mp_int *value) {
+    (void)S;
+    mp_clear(value);
+}
+
 static void YASL_pushbigint(struct YASL_State *S, mp_int *value) {
-	YASL_pushuserdata(S, value, BIGINT_NAME, (void (*)(void *))mp_clear);
+	YASL_pushuserdata(S, value, BIGINT_NAME, (void (*)(struct YASL_State *, void *))mp_clear);
 	YASL_loadmt(S, BIGINT_NAME);
 	YASL_setmt(S);
 }
