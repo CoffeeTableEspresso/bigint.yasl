@@ -3,6 +3,8 @@
 
 #include "tommath.h"
 
+#include <string.h>
+
 #define BIGINT_VERSION "v0.2.0"
 
 static const char *BIGINT_NAME = "bigint";
@@ -74,14 +76,59 @@ int YASL_bigint_bigint(struct YASL_State *S) {
 
 int YASL_bigint_tostr(struct YASL_State *S) {
 	mp_int *v = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.tostr", 0);
+	int radix = 10;
+	const char *prefix = "";
+	const char *suffix = "";
+	if (!YASL_isnundef(S, 1)) {
+		const char *str = YASL_popcstr(S);
+		const size_t len = strlen(str);
+
+		if (len != 1) {
+			free(str);
+			YASL_print_err(S, "ValueError: invalid format str: (%s).", str);
+			YASL_throw_err(S, YASL_VALUE_ERROR);
+		}
+
+		const char format_char = *str;
+		free(str);
+		switch (format_char) {
+		case 'x':
+			radix = 16;
+			prefix = "0x";
+			break;
+		case 'd':
+			break;
+		case 'b':
+			radix = 2;
+			prefix = "0b";
+			break;
+		case 'r':
+			prefix = "bigint('";
+			suffix = "')";
+			break;
+		default:
+			YASL_print_err(S, "ValueErorr: Unexpected format str: %c.", format_char);
+			YASL_throw_err(S, YASL_VALUE_ERROR);
+		}
+	}
 
 	int size;
-	int result = mp_radix_size(v, 10, &size);
-	(void) result;
+	int result = mp_radix_size(v, radix, &size);
+	if (result) {
+		YASL_print_err(S, "Error: could not stringify: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_VALUE_ERROR);
+	}
 
-	char *buffer = malloc(size);
+	char *buffer = malloc(strlen(prefix) + size + strlen(suffix));
+	char *curr = buffer;
 
-	mp_toradix(v, buffer, 10);
+	strcpy(curr, prefix);
+	curr += strlen(prefix);
+
+	mp_toradix(v, curr, radix);
+	curr += size - 1; // -1 because size includes the NUL terminator
+
+	strcpy(curr, suffix);
 
 	YASL_pushzstr(S, buffer);
 
@@ -406,7 +453,7 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 	YASL_registermt(S, BIGINT_NAME);
 
 	struct YASLX_function functions[] = {
-		{ "tostr", YASL_bigint_tostr, 1 },
+		{ "tostr", YASL_bigint_tostr, 2 },
 		{ "iszero", YASL_bigint_iszero, 1 },
 		{ "iseven", YASL_bigint_iseven, 1 },
 		{ "isodd", YASL_bigint_isodd, 1 },
