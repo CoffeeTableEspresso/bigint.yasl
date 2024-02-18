@@ -31,7 +31,7 @@ static void YASL_pushbigint(struct YASL_State *S, mp_int *value) {
 	YASL_setmt(S);
 }
 
-int YASL_bigint_bigint(struct YASL_State *S) {
+static int YASL_bigint_bigint(struct YASL_State *S) {
 	if (YASL_isnuserdata(S, BIGINT_NAME, 0)) {
 		return 1;
 	}
@@ -74,13 +74,13 @@ int YASL_bigint_bigint(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_tostr(struct YASL_State *S) {
+static int YASL_bigint_tostr(struct YASL_State *S) {
 	mp_int *v = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.tostr", 0);
 	int radix = 10;
 	const char *prefix = "";
 	const char *suffix = "";
 	if (!YASL_isnundef(S, 1)) {
-		const char *str = YASL_popcstr(S);
+		char *str = YASL_popcstr(S);
 		const size_t len = strlen(str);
 
 		if (len != 1) {
@@ -137,7 +137,7 @@ int YASL_bigint_tostr(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_iszero(struct YASL_State *S) {
+static int YASL_bigint_iszero(struct YASL_State *S) {
 	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.iszero", 0);
 
 	YASL_pushbool(S, mp_iszero(n));
@@ -145,7 +145,7 @@ int YASL_bigint_iszero(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_iseven(struct YASL_State *S) {
+static int YASL_bigint_iseven(struct YASL_State *S) {
 	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.iseven", 0);
 
 	YASL_pushbool(S, mp_iseven(n));
@@ -153,7 +153,7 @@ int YASL_bigint_iseven(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_isodd(struct YASL_State *S) {
+static int YASL_bigint_isodd(struct YASL_State *S) {
 	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.isodd", 0);
 
 	YASL_pushbool(S, mp_isodd(n));
@@ -161,7 +161,7 @@ int YASL_bigint_isodd(struct YASL_State *S) {
 	return 1;
 }
 
-const uint32_t MAX_UINT32 = 0xFFFFFFFF;
+static const uint32_t MAX_UINT32 = 0xFFFFFFFF;
 static int YASL_bigint_log_n(struct YASL_State *S) {
 	mp_int *a = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.log_n", 0);
 	yasl_int n = YASLX_checknint(S, "bigint.log_n", 1);
@@ -187,7 +187,7 @@ static int YASL_bigint_log_n(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_isprime(struct YASL_State *S) {
+static int YASL_bigint_isprime(struct YASL_State *S) {
 	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.isprime", 0);
 
 	const int bitsize = mp_count_bits(n);
@@ -499,6 +499,7 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 		{ "pow", YASL_bigint___pow, 2 },
 		{ "powmod", YASL_bigint_powmod, 3 },
 		{ "log_n", YASL_bigint_log_n, 2 },
+		{ NULL, NULL, 0 }
 	};
 
 	YASLX_tablesetfunctions(S, utils);
