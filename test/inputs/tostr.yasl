@@ -1,0 +1,7 @@
+const bigint = require('bigint')
+
+echo bigint('54321')->tostr('r')
+echo bigint('12345')->tostr('b')
+echo bigint('9876')->tostr('d')
+echo bigint('121212')->tostr('x')
+

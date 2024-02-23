@@ -3,6 +3,8 @@
 
 #include "tommath.h"
 
+#include <string.h>
+
 #define BIGINT_VERSION "v0.2.0"
 
 static const char *BIGINT_NAME = "bigint";
@@ -24,12 +26,12 @@ static void free_bigint(struct YASL_State *S, mp_int *value) {
 }
 
 static void YASL_pushbigint(struct YASL_State *S, mp_int *value) {
-	YASL_pushuserdata(S, value, BIGINT_NAME, (void (*)(struct YASL_State *, void *))mp_clear);
+	YASL_pushuserdata(S, value, BIGINT_NAME, (void (*)(struct YASL_State *, void *))free_bigint);
 	YASL_loadmt(S, BIGINT_NAME);
 	YASL_setmt(S);
 }
 
-int YASL_bigint_bigint(struct YASL_State *S) {
+static int YASL_bigint_bigint(struct YASL_State *S) {
 	if (YASL_isnuserdata(S, BIGINT_NAME, 0)) {
 		return 1;
 	}
@@ -72,16 +74,61 @@ int YASL_bigint_bigint(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_tostr(struct YASL_State *S) {
+static int YASL_bigint_tostr(struct YASL_State *S) {
 	mp_int *v = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.tostr", 0);
+	int radix = 10;
+	const char *prefix = "";
+	const char *suffix = "";
+	if (!YASL_isnundef(S, 1)) {
+		char *str = YASL_popcstr(S);
+		const size_t len = strlen(str);
+
+		if (len != 1) {
+			free(str);
+			YASL_print_err(S, "ValueError: invalid format str: (%s).", str);
+			YASL_throw_err(S, YASL_VALUE_ERROR);
+		}
+
+		const char format_char = *str;
+		free(str);
+		switch (format_char) {
+		case 'x':
+			radix = 16;
+			prefix = "0x";
+			break;
+		case 'd':
+			break;
+		case 'b':
+			radix = 2;
+			prefix = "0b";
+			break;
+		case 'r':
+			prefix = "bigint('";
+			suffix = "')";
+			break;
+		default:
+			YASL_print_err(S, "ValueErorr: Unexpected format str: %c.", format_char);
+			YASL_throw_err(S, YASL_VALUE_ERROR);
+		}
+	}
 
 	int size;
-	int result = mp_radix_size(v, 10, &size);
-	(void) result;
+	int result = mp_radix_size(v, radix, &size);
+	if (result) {
+		YASL_print_err(S, "Error: could not stringify: %s", mp_error_to_string(result));
+		YASL_throw_err(S, YASL_VALUE_ERROR);
+	}
 
-	char *buffer = malloc(size);
+	char *buffer = malloc(strlen(prefix) + size + strlen(suffix));
+	char *curr = buffer;
 
-	mp_toradix(v, buffer, 10);
+	strcpy(curr, prefix);
+	curr += strlen(prefix);
+
+	mp_toradix(v, curr, radix);
+	curr += size - 1; // -1 because size includes the NUL terminator
+
+	strcpy(curr, suffix);
 
 	YASL_pushzstr(S, buffer);
 
@@ -90,7 +137,7 @@ int YASL_bigint_tostr(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_iszero(struct YASL_State *S) {
+static int YASL_bigint_iszero(struct YASL_State *S) {
 	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.iszero", 0);
 
 	YASL_pushbool(S, mp_iszero(n));
@@ -98,7 +145,7 @@ int YASL_bigint_iszero(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_iseven(struct YASL_State *S) {
+static int YASL_bigint_iseven(struct YASL_State *S) {
 	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.iseven", 0);
 
 	YASL_pushbool(S, mp_iseven(n));
@@ -106,7 +153,7 @@ int YASL_bigint_iseven(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_isodd(struct YASL_State *S) {
+static int YASL_bigint_isodd(struct YASL_State *S) {
 	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.isodd", 0);
 
 	YASL_pushbool(S, mp_isodd(n));
@@ -114,7 +161,7 @@ int YASL_bigint_isodd(struct YASL_State *S) {
 	return 1;
 }
 
-const uint32_t MAX_UINT32 = 0xFFFFFFFF;
+static const uint32_t MAX_UINT32 = 0xFFFFFFFF;
 static int YASL_bigint_log_n(struct YASL_State *S) {
 	mp_int *a = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.log_n", 0);
 	yasl_int n = YASLX_checknint(S, "bigint.log_n", 1);
@@ -140,7 +187,7 @@ static int YASL_bigint_log_n(struct YASL_State *S) {
 	return 1;
 }
 
-int YASL_bigint_isprime(struct YASL_State *S) {
+static int YASL_bigint_isprime(struct YASL_State *S) {
 	mp_int *n = YASLX_checknuserdata(S, BIGINT_NAME, "bigint.isprime", 0);
 
 	const int bitsize = mp_count_bits(n);
@@ -405,103 +452,36 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 	YASL_pushtable(S);
 	YASL_registermt(S, BIGINT_NAME);
 
+	struct YASLX_function functions[] = {
+		{ "tostr", YASL_bigint_tostr, 2 },
+		{ "iszero", YASL_bigint_iszero, 1 },
+		{ "iseven", YASL_bigint_iseven, 1 },
+		{ "isodd", YASL_bigint_isodd, 1 },
+		{ "isprime", YASL_bigint_isprime, 1 },
+		{ "log_n", YASL_bigint_log_n, 2 },
+		{ "__neg", YASL_bigint___neg, 1 },
+		{ "__pos", YASL_bigint___pos, 1 },
+		{ "__add", YASL_bigint___add, 2 },
+		{ "__sub", YASL_bigint___sub, 2 },
+		{ "__idiv", YASL_bigint___idiv, 2 },
+		{ "__mod", YASL_bigint___mod, 2 },
+		{ "__mul", YASL_bigint___mul, 2 },
+		{ "__pow", YASL_bigint___pow, 2 },
+		{ "__band", YASL_bigint___band, 2 },
+		{ "__bor", YASL_bigint___bor, 2 },
+		{ "__bxor", YASL_bigint___bxor, 2 },
+		{ "__bshl", YASL_bigint___bshl, 2 },
+		{ "__bshr", YASL_bigint___bshr, 2 },
+		{ "__lt", YASL_bigint___lt, 2 },
+		{ "__le", YASL_bigint___le, 2 },
+		{ "__gt", YASL_bigint___gt, 2 },
+		{ "__ge", YASL_bigint___ge, 2 },
+		{ "__eq", YASL_bigint___eq, 2 },
+		{ NULL, NULL, 0 }
+	};
+
 	YASL_loadmt(S, BIGINT_NAME);
-
-	YASL_pushlit(S, "tostr");
-	YASL_pushcfunction(S, YASL_bigint_tostr, 1);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "iszero");
-	YASL_pushcfunction(S, YASL_bigint_iszero, 1);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "iseven");
-	YASL_pushcfunction(S, YASL_bigint_iseven, 1);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "isodd");
-	YASL_pushcfunction(S, YASL_bigint_isodd, 1);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "isprime");
-	YASL_pushcfunction(S, YASL_bigint_isprime, 1);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "log_n");
-	YASL_pushcfunction(S, YASL_bigint_log_n, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__neg");
-	YASL_pushcfunction(S, YASL_bigint___neg, 1);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__pos");
-	YASL_pushcfunction(S, YASL_bigint___pos, 1);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__add");
-	YASL_pushcfunction(S, YASL_bigint___add, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__sub");
-	YASL_pushcfunction(S, YASL_bigint___sub, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__idiv");
-	YASL_pushcfunction(S, YASL_bigint___idiv, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__mod");
-	YASL_pushcfunction(S, YASL_bigint___mod, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__mul");
-	YASL_pushcfunction(S, YASL_bigint___mul, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__pow");
-	YASL_pushcfunction(S, YASL_bigint___pow, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__band");
-	YASL_pushcfunction(S, YASL_bigint___band, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__bor");
-	YASL_pushcfunction(S, YASL_bigint___bor, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__bxor");
-	YASL_pushcfunction(S, YASL_bigint___bxor, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__bshl");
-	YASL_pushcfunction(S, YASL_bigint___bshl, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__bshr");
-	YASL_pushcfunction(S, YASL_bigint___bshr, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__lt");
-	YASL_pushcfunction(S, YASL_bigint___lt, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__le");
-	YASL_pushcfunction(S, YASL_bigint___le, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__gt");
-	YASL_pushcfunction(S, YASL_bigint___gt, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__ge");
-	YASL_pushcfunction(S, YASL_bigint___ge, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "__eq");
-	YASL_pushcfunction(S, YASL_bigint___eq, 2);
-	YASL_tableset(S);
+	YASLX_tablesetfunctions(S, functions);
 
 	YASL_pushtable(S);
 
@@ -512,29 +492,17 @@ int YASL_load_dyn_lib(struct YASL_State *S) {
 	YASL_setmt(S);
 
 	// libTomMath utilities exposed
-	YASL_pushlit(S, "kronecker");
-	YASL_pushcfunction(S, YASL_bigint_kronecker, 2);
-	YASL_tableset(S);
+	struct YASLX_function utils[] = {
+		{ "kronecker", YASL_bigint_kronecker, 2 },
+		{ "gcd", YASL_bigint_gcd, 2 },
+		{ "lcm", YASL_bigint_lcm, 2 },
+		{ "pow", YASL_bigint___pow, 2 },
+		{ "powmod", YASL_bigint_powmod, 3 },
+		{ "log_n", YASL_bigint_log_n, 2 },
+		{ NULL, NULL, 0 }
+	};
 
-	YASL_pushlit(S, "gcd");
-	YASL_pushcfunction(S, YASL_bigint_gcd, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "lcm");
-	YASL_pushcfunction(S, YASL_bigint_lcm, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "pow");
-	YASL_pushcfunction(S, YASL_bigint___pow, 2);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "powmod");
-	YASL_pushcfunction(S, YASL_bigint_powmod, 3);
-	YASL_tableset(S);
-
-	YASL_pushlit(S, "log_n");
-	YASL_pushcfunction(S, YASL_bigint_log_n, 2);
-	YASL_tableset(S);
+	YASLX_tablesetfunctions(S, utils);
 
 	YASL_pushlit(S, "__VERSION__");\
 	YASL_pushlit(S, BIGINT_VERSION);
